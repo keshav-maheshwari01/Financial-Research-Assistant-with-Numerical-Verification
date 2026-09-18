@@ -1,0 +1,4 @@
+company,year,revenue,cost_of_revenue,gross_profit,operating_income,net_income,current_assets,current_liabilities,inventory,total_assets,shareholders_equity,total_debt
+Northwind Goods,2023,820,560,260,110,72,600,360,160,1400,470,260
+Northwind Goods,2024,890,600,290,121,80,660,390,175,1480,490,280
+Northwind Goods,2025,960,640,320,132,86,720,410,185,1550,520,300

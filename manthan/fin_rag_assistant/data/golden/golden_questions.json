@@ -1,0 +1,21 @@
+[
+  {"question": "What was Acme Retail Inc.'s revenue growth in 2024?", "company": "Acme Retail Inc.", "year": 2024},
+  {"question": "What was the gross margin in 2024?", "company": "Acme Retail Inc.", "year": 2024},
+  {"question": "What was the operating margin in 2024?", "company": "Acme Retail Inc.", "year": 2024},
+  {"question": "What was the net margin in 2024?", "company": "Acme Retail Inc.", "year": 2024},
+  {"question": "What was the current ratio in 2024?", "company": "Acme Retail Inc.", "year": 2024},
+  {"question": "What was the quick ratio in 2024?", "company": "Acme Retail Inc.", "year": 2024},
+  {"question": "What was return on equity in 2024?", "company": "Acme Retail Inc.", "year": 2024},
+  {"question": "What was the debt-to-equity ratio in 2024?", "company": "Acme Retail Inc.", "year": 2024},
+  {"question": "What was the working capital in 2024?", "company": "Acme Retail Inc.", "year": 2024},
+  {"question": "Why did gross margin fall in 2024?", "company": "Acme Retail Inc.", "year": 2024},
+  {"question": "Was the company more profitable in 2024 than 2023?", "company": "Acme Retail Inc.", "year": 2024},
+  {"question": "How did profitability change between 2023 and 2024?", "company": "Acme Retail Inc.", "year": 2024},
+  {"question": "Why did inventory increase?", "company": "Acme Retail Inc.", "year": 2024},
+  {"question": "What was Company B's revenue in 2024?", "company": "Northwind Goods", "year": 2024},
+  {"question": "What was Acme Retail Inc.'s revenue growth in 2027?", "company": "Acme Retail Inc.", "year": 2027},
+  {"question": "Compare Company A and Company B in 2024.", "year": 2024},
+  {"question": "What was the current ratio in 2027?", "company": "Acme Retail Inc.", "year": 2027},
+  {"question": "What was the inventory change in 2024?", "company": "Acme Retail Inc.", "year": 2024},
+  {"question": "Why did operating margin decline?", "company": "Acme Retail Inc.", "year": 2024}
+]

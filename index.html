@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Financial Research Assistant with Numerical Verification — upload CSVs, explore statements, verify calculations, and ask grounded financial questions with visible calculation traces." />
+    <title>Verity Finance Lab — Financial Research Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <!-- ═══════════ SIDEBAR ═══════════ -->
+      <aside class="rail" aria-label="Dataset navigation">
+        <div class="brand">
+          <span class="brand-mark">VF</span>
+          <div>
+            <strong>Verity Finance</strong>
+            <small>Research Assistant</small>
+          </div>
+        </div>
+
+        <nav class="nav" id="nav">
+          <button class="nav-button active" type="button" data-view="overview">
+            <span class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </span>
+            Overview
+          </button>
+          <button class="nav-button" type="button" data-view="upload">
+            <span class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </span>
+            Upload Insights
+          </button>
+          <button class="nav-button" type="button" data-view="statements">
+            <span class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </span>
+            Statements
+          </button>
+          <button class="nav-button" type="button" data-view="verification">
+            <span class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </span>
+            Verification
+          </button>
+          <button class="nav-button" type="button" data-view="narrative">
+            <span class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </span>
+            Narrative
+          </button>
+          <button class="nav-button" type="button" data-view="qa">
+            <span class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </span>
+            QA Lab
+          </button>
+        </nav>
+
+        <section class="rail-card">
+          <span class="live-dot"></span>
+          <p id="datasetStatus">Loading dataset from files folder...</p>
+        </section>
+      </aside>
+
+      <!-- ═══════════ MAIN CONTENT ═══════════ -->
+      <section class="main">
+        <!-- HERO -->
+        <header class="hero">
+          <div class="hero-text">
+            <p class="eyebrow">Numerical Research Assistant</p>
+            <h1>Financial answers with the math visible.</h1>
+            <p>
+              Upload CSVs, inspect financial statements, verify calculations, detect contradictions,
+              and ask grounded questions with a visible calculation trace.
+            </p>
+          </div>
+          <div class="hero-controls">
+            <label>
+              Company
+              <select id="companySelect"></select>
+            </label>
+            <label>
+              Fiscal year
+              <select id="yearSelect"></select>
+            </label>
+            <button class="primary" id="runVerification" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Run verification
+            </button>
+          </div>
+        </header>
+
+        <!-- KPI STRIP -->
+        <section class="metric-grid" id="metricGrid" aria-label="Key metrics"></section>
+
+        <!-- MODEL Q&A CARD -->
+        <section class="model-card">
+          <div class="model-input">
+            <div class="card-head">
+              <div>
+                <p class="eyebrow">Research model</p>
+                <h2>Ask a financial question</h2>
+              </div>
+              <span class="pill strong" id="modelStatus">Python engine</span>
+            </div>
+            <select id="questionSelect" aria-label="Supported question"></select>
+            <textarea id="questionInput" rows="3" placeholder="Ask about revenue growth, margin change, working capital, contradictions, CAGR, ROE, or peer comparison."></textarea>
+            <button class="primary ask-button" id="askButton" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              Generate grounded answer
+            </button>
+          </div>
+          <div class="model-output">
+            <div class="answer-head">
+              <span class="pill" id="answerScope">No answer yet</span>
+              <span class="pill" id="answerConfidence">-- confidence</span>
+            </div>
+            <h2 id="modelAnswerTitle">Ready for numerical verification.</h2>
+            <p id="modelAnswer">Choose a benchmark question or type your own. The backend retrieves evidence, computes the metric, and returns a traceable answer.</p>
+            <div class="model-chart" id="modelChart"></div>
+          </div>
+        </section>
+
+        <!-- ═══════ OVERVIEW PANEL ═══════ -->
+        <section class="view active" data-panel="overview">
+          <div class="wide-card command-center">
+            <div>
+              <p class="eyebrow">Current read</p>
+              <h2 id="thesisTitle">Building thesis...</h2>
+              <p id="thesisText"></p>
+            </div>
+            <div class="score-stage">
+              <div class="score-ring">
+                <strong id="qualityScore">--</strong>
+                <span>quality score</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <p class="eyebrow">Annual trend</p>
+                  <h2>Revenue and margin trail</h2>
+                </div>
+                <select id="trendMetric">
+                  <option value="revenue_usd">Revenue</option>
+                  <option value="net_income_usd">Net income</option>
+                  <option value="ebitda_usd">EBITDA</option>
+                  <option value="free_cash_flow_usd">Free cash flow</option>
+                </select>
+              </div>
+              <div class="chart" id="trendChart"></div>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <p class="eyebrow">Peer lens</p>
+                  <h2>FY2024 comparison</h2>
+                </div>
+                <span class="pill">AlphaCorp vs BetaTech</span>
+              </div>
+              <div class="peer-grid" id="peerGrid"></div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ═══════ UPLOAD INSIGHTS PANEL ═══════ -->
+        <section class="view" data-panel="upload">
+          <div class="wide-card upload-hero">
+            <div>
+              <p class="eyebrow">Universal CSV insight engine</p>
+              <h2>Upload any financial CSV and get instant graphs, profit analysis, and summary insights.</h2>
+              <p>
+                The assistant detects time columns, numeric measures, revenue, costs, expenses, profit,
+                and margin patterns. It then builds a dashboard and explains likely reasons from the numbers.
+              </p>
+            </div>
+            <label class="upload-box">
+              <input id="csvUpload" type="file" accept=".csv,text/csv" />
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>Choose CSV</span>
+              <strong id="uploadName">No file selected</strong>
+            </label>
+          </div>
+
+          <!-- Upload KPI cards -->
+          <section class="metric-grid upload-metrics" id="uploadMetrics"></section>
+
+          <div class="two-col">
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <p class="eyebrow">Auto graph</p>
+                  <h2 id="uploadChartTitle">Upload a CSV to begin</h2>
+                </div>
+                <select id="uploadMetricSelect"></select>
+              </div>
+              <div class="chart upload-chart" id="uploadChart"></div>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <p class="eyebrow">Insight summary</p>
+                  <h2>What the data says</h2>
+                </div>
+                <span class="pill" id="uploadRowCount">0 rows</span>
+              </div>
+              <div class="insight-list" id="uploadInsights">
+                <div class="insight-row">
+                  <strong>Waiting for data</strong>
+                  <small>Upload a CSV with columns such as year, revenue, expenses, profit, net income, or margin.</small>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <!-- Multi-chart dashboard for uploads -->
+          <div class="two-col" id="uploadDashboard" style="display:none">
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <p class="eyebrow">Profit timeline</p>
+                  <h2 id="uploadProfitTitle">Profit / loss by period</h2>
+                </div>
+                <span class="pill" id="uploadProfitSummary">--</span>
+              </div>
+              <div class="chart upload-chart" id="uploadProfitChart"></div>
+            </article>
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <p class="eyebrow">Margin analysis</p>
+                  <h2 id="uploadMarginTitle">Margin progression</h2>
+                </div>
+                <span class="pill" id="uploadMarginSummary">--</span>
+              </div>
+              <div class="chart upload-chart" id="uploadMarginChart"></div>
+            </article>
+          </div>
+
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <p class="eyebrow">Preview</p>
+                <h2>Uploaded rows</h2>
+              </div>
+              <span class="pill">First 25 rows</span>
+            </div>
+            <div class="table-wrap">
+              <table id="uploadTable"></table>
+            </div>
+          </article>
+        </section>
+
+        <!-- ═══════ STATEMENTS PANEL ═══════ -->
+        <section class="view" data-panel="statements">
+          <div class="two-col">
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <p class="eyebrow">Statement explorer</p>
+                  <h2>Income, cash flow, balance sheet</h2>
+                </div>
+                <select id="statementSelect">
+                  <option value="income">Income statement</option>
+                  <option value="cash">Cash flow</option>
+                  <option value="balance">Balance sheet</option>
+                  <option value="working">Working capital</option>
+                  <option value="ratios">Ratios</option>
+                </select>
+              </div>
+              <div class="table-wrap">
+                <table id="statementTable"></table>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <p class="eyebrow">Composition</p>
+                  <h2 id="compositionTitle">Capital structure</h2>
+                </div>
+                <span class="pill" id="compositionYear">FY2024</span>
+              </div>
+              <div class="composition" id="composition"></div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ═══════ VERIFICATION PANEL ═══════ -->
+        <section class="view" data-panel="verification">
+          <div class="two-col">
+            <div class="card">
+              <div class="card-head">
+                <div>
+                  <p class="eyebrow">Formula engine</p>
+                  <h2>Auto checks against source rows</h2>
+                </div>
+                <span class="pill strong" id="checkSummary">Ready</span>
+              </div>
+              <div class="check-list" id="checkList"></div>
+            </div>
+            <div class="card">
+              <div class="card-head">
+                <div>
+                  <p class="eyebrow">Answer trace</p>
+                  <h2>Latest calculation path</h2>
+                </div>
+                <span class="pill">Auditable</span>
+              </div>
+              <div class="trace-list" id="traceList"></div>
+            </div>
+          </div>
+          <div class="wide-card">
+            <div class="card-head">
+              <div>
+                <p class="eyebrow">Retrieved evidence</p>
+                <h2>Citations used by the model</h2>
+              </div>
+              <span class="pill" id="citationCount">0 chunks</span>
+            </div>
+            <div class="citation-list" id="citationList"></div>
+          </div>
+        </section>
+
+        <!-- ═══════ NARRATIVE PANEL ═══════ -->
+        <section class="view" data-panel="narrative">
+          <div class="two-col">
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <p class="eyebrow">Narrative ledger</p>
+                  <h2>Claims tied to metrics</h2>
+                </div>
+                <span class="pill" id="claimCount">0 claims</span>
+              </div>
+              <div class="claim-list" id="claimList"></div>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <p class="eyebrow">System config</p>
+                  <h2>Verification settings</h2>
+                </div>
+                <span class="pill">CSV driven</span>
+              </div>
+              <div class="config-list" id="configList"></div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ═══════ QA LAB PANEL ═══════ -->
+        <section class="view" data-panel="qa">
+          <div class="wide-card qa-card">
+            <div class="card-head">
+              <div>
+                <p class="eyebrow">Golden QA lab</p>
+                <h2>Ask against the benchmark questions</h2>
+              </div>
+              <select id="qaSelect"></select>
+            </div>
+            <div class="qa-layout">
+              <div class="answer-box">
+                <span class="pill" id="qaDifficulty">Difficulty</span>
+                <h3 id="qaQuestion">Question</h3>
+                <p id="qaAnswer"></p>
+              </div>
+              <div class="formula-box">
+                <p class="eyebrow">Formula and tolerance</p>
+                <code id="qaFormula"></code>
+                <div class="qa-meta" id="qaMeta"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <!-- Toast -->
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <!-- ═══════ CHATBOT ═══════ -->
+    <section class="chatbot" aria-label="Financial assistant chatbot">
+      <button class="chat-toggle" id="chatToggle" type="button">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </button>
+      <div class="chat-panel" id="chatPanel">
+        <div class="chat-head">
+          <div>
+            <strong>Finance Chat</strong>
+            <small>Direct answers with calculation traces</small>
+          </div>
+          <button type="button" id="chatClose" aria-label="Close chat">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="bot-msg">
+            <strong>Hi!</strong> Ask me anything about the financial data.<br/>
+            <em>Try: "What was AlphaCorp's revenue growth rate in FY2024?"</em>
+          </div>
+        </div>
+        <form class="chat-form" id="chatForm">
+          <input id="chatInput" placeholder="Ask a financial question..." autocomplete="off" />
+          <button type="submit">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <script src="app.js"></script>
+  </body>
+</html>

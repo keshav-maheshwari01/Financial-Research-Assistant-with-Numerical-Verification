@@ -1,0 +1,4 @@
+company,year,revenue,cost_of_revenue,gross_profit,operating_income,net_income,current_assets,current_liabilities,inventory,total_assets,shareholders_equity,total_debt
+Acme Retail Inc.,2023,571,378,193,78,46,410,280,120,1021,310,210
+Acme Retail Inc.,2024,640,422,218,85,52,450,310,125,1065,330,220
+Acme Retail Inc.,2025,700,455,245,96,61,500,330,140,1120,360,230
