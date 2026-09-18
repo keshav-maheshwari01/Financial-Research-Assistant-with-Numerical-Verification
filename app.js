@@ -57,6 +57,7 @@ contradiction_threshold,0.15,Relative deviation to flag contradiction,float,0.15
 
 /* ═══════ STATE ═══════ */
 const state = { data: {}, company: "", year: "", source: "files", questions: [], latestAnswer: null, upload: null };
+const API_BASE = window.location.protocol === "file:" ? "http://127.0.0.1:8000" : "";
 
 const $ = (sel) => document.querySelector(sel);
 const money = (v) => {
@@ -559,12 +560,24 @@ function renderUploadMetrics(analysis, rows) {
 }
 
 function renderUploadChart() {
-  if (!state.uploadRows.length) return;
+  const upload = state.upload;
+  if (!upload?.rows?.length) {
+    $("#uploadChartTitle").textContent = "Upload a CSV to begin";
+    $("#uploadChart").innerHTML = `<div style="display:grid;place-items:center;height:100%;color:var(--muted);font-size:0.85rem">Upload a CSV with at least one numeric column.</div>`;
+    return;
+  }
+
   const metric = $("#uploadMetricSelect").value;
-  if (!metric) return;
-  const labels = state.uploadRows.map(r => r.period || r.year || r.date || "");
-  const values = state.uploadRows.map(r => Number(r[metric] || 0));
+  if (!metric || !upload.analysis.numeric.includes(metric)) {
+    $("#uploadChartTitle").textContent = "No numeric field available";
+    $("#uploadChart").innerHTML = `<div style="display:grid;place-items:center;height:100%;color:var(--muted);font-size:0.85rem">The uploaded CSV has no numeric column to graph.</div>`;
+    return;
+  }
+
+  const labels = upload.analysis.labels;
+  const values = upload.rows.map((row) => Number(row[metric] || 0));
   const fmt = money;
+  $("#uploadChartTitle").textContent = `${clean(metric)} over time`;
   $("#uploadChart").innerHTML = buildSvgChart(values, labels, fmt);
 }
 
@@ -630,7 +643,44 @@ function renderUploadInsights(rows, fileName) {
 
 /* ═══════ LOCAL ANSWER ═══════ */
 function localAnswer(question) {
-  const qa = state.data.qa.find((r) => r.question === question) || state.data.qa[0] || {};
+  const normalizedQuestion = question.trim().toLowerCase();
+  if (/^(hi|hello|hey|thanks|thank you)[!. ]*$/.test(normalizedQuestion)) {
+    return {
+      answer: "Hello. Ask me about revenue growth, margins, working capital, or another financial metric.",
+      company: state.company,
+      year: state.year,
+      confidence: 0,
+      trace: [],
+      citations: [],
+      chart: { labels: [], values: [], format: "money" },
+    };
+  }
+
+  if (/^(ok|okay|got it|great|sure)[!. ]*$/.test(normalizedQuestion)) {
+    return {
+      answer: "Great. Ask me about a company metric or financial topic whenever you are ready.",
+      company: state.company,
+      year: state.year,
+      confidence: 0,
+      trace: [],
+      citations: [],
+      chart: { labels: [], values: [], format: "money" },
+    };
+  }
+
+  const qa = state.data.qa.find((r) => r.question.toLowerCase() === normalizedQuestion);
+  if (!qa) {
+    return {
+      answer: "I can help explain the financial data in this dashboard. Try asking about revenue growth, gross margin, operating margin, liquidity, working capital, ROE, or debt-to-equity.",
+      company: state.company,
+      year: state.year,
+      confidence: 0,
+      trace: [],
+      citations: [],
+      chart: { labels: [], values: [], format: "money" },
+    };
+  }
+
   return {
     answer: qa.expected_narrative_elements || "Model API is offline, but the benchmark answer is available from the golden QA file.",
     company: qa.company || state.company,
@@ -658,7 +708,7 @@ async function askModel() {
   $("#askButton").disabled = true;
   $("#askButton").innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-dasharray="31.4" stroke-dashoffset="10"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></circle></svg> Calculating...`;
   try {
-    const r = await fetch("/api/ask", {
+    const r = await fetch(`${API_BASE}/api/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question, company: state.company, year: state.year }),
@@ -687,7 +737,7 @@ function applyAnswer(answer) {
 
 async function askQuestion(question) {
   try {
-    const r = await fetch("/api/ask", {
+    const r = await fetch(`${API_BASE}/api/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question, company: state.company, year: state.year }),
