@@ -189,18 +189,71 @@ function renderThesis() {
 }
 
 /* ═══════ TREND CHART ═══════ */
+
+function buildSvgChart(values, labels, formatFn) {
+  if (!values || !values.length) return `<div style="display:grid;place-items:center;height:100%;color:var(--muted);font-size:0.85rem">No data available</div>`;
+  
+  let yMin = Math.min(...values);
+  let yMax = Math.max(...values);
+  if (yMin === yMax) { yMin = Math.min(0, yMin); yMax = yMax > 0 ? yMax * 1.2 : 1; }
+  let range = yMax - yMin || 1;
+
+  const getP = (v, i) => {
+    const x = values.length > 1 ? 8 + (i / (values.length - 1)) * 84 : 50;
+    const y = 80 - ((v - yMin) / range) * 60; 
+    return { x, y, v, l: labels[i] };
+  };
+
+  const pts = values.map(getP);
+  
+  let dLine = "";
+  if (pts.length === 1) {
+    dLine = `M ${pts[0].x - 10},${pts[0].y} L ${pts[0].x + 10},${pts[0].y}`;
+  } else {
+    dLine = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x},${p.y}`).join(" ");
+  }
+
+  const dArea = pts.length > 1 
+    ? `${dLine} L ${pts[pts.length - 1].x},90 L ${pts[0].x},90 Z`
+    : "";
+
+  const gradId = 'lineGrad_' + Math.random().toString(36).substring(7);
+  const svg = `
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: visible; z-index: 1;">
+      <defs>
+        <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.35" />
+          <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.0" />
+        </linearGradient>
+      </defs>
+      ${dArea ? `<path d="${dArea}" fill="url(#${gradId})" />` : ''}
+      <path d="${dLine}" fill="none" stroke="#0ea5e9" stroke-width="3" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  `;
+
+  const htmlPts = pts.map(p => {
+    const formatted = formatFn ? formatFn(p.v) : p.v;
+    return `
+      <div class="chart-dot" style="left: ${p.x}%; top: ${p.y}%;" title="${p.l}: ${formatted}"></div>
+      <div class="chart-label" style="left: ${p.x}%; top: calc(${p.y}% - 32px);">
+        <strong style="color:var(--ink); font-size:0.75rem;">${p.l}</strong><br/>
+        <span style="color:var(--aqua); font-weight:700; font-size:0.75rem;">${formatted}</span>
+      </div>
+    `;
+  }).join("");
+
+  return `<div style="position: relative; width: 100%; height: 260px; padding-top: 10px;">${svg}${htmlPts}</div>`;
+}
+
 function renderTrend() {
   const metric = $("#trendMetric").value;
   const source = metric === "free_cash_flow_usd"
     ? state.data.cash.filter((r) => r.company === state.company)
     : annualIncome();
-  const max = Math.max(...source.map((r) => Number(r[metric] || 0)), 1);
-  $("#trendChart").innerHTML = source
-    .map((r) => {
-      const v = Number(r[metric] || 0);
-      return `<div class="bar"><span style="height:${Math.max(5, (v / max) * 100)}%"></span><small>${r.fiscal_year}<br>${money(v)}</small></div>`;
-    })
-    .join("");
+  const values = source.map(r => Number(r[metric] || 0));
+  const labels = source.map(r => r.fiscal_year);
+  const fmt = metric.includes('pct') ? pct : money;
+  $("#trendChart").innerHTML = buildSvgChart(values, labels, fmt);
 }
 
 /* ═══════ PEERS ═══════ */
@@ -367,13 +420,7 @@ function fmtChart(v, f) {
 function renderModelChart(chart = {}) {
   const vals = chart.values || [];
   const labels = chart.labels || [];
-  const max = Math.max(...vals.map((v) => Math.abs(Number(v || 0))), 1);
-  $("#modelChart").innerHTML = vals
-    .map((v, i) => {
-      const h = Math.max(6, (Math.abs(Number(v || 0)) / max) * 100);
-      return `<div class="bar"><span style="height:${h}%"></span><small>${labels[i] || ""}<br>${fmtChart(v, chart.format)}</small></div>`;
-    })
-    .join("");
+  $("#modelChart").innerHTML = buildSvgChart(vals, labels, chart.format === "percent" ? pct : money);
 }
 
 /* ═══════ TRACE & CITATIONS ═══════ */
@@ -512,35 +559,24 @@ function renderUploadMetrics(analysis, rows) {
 }
 
 function renderUploadChart() {
-  if (!state.upload) return;
-  const { rows, analysis } = state.upload;
-  const metric = $("#uploadMetricSelect").value || analysis.defaultMetric;
-  const values = rows.map((r) => Number(r[metric] || 0));
-  const max = Math.max(...values.map((v) => Math.abs(v)), 1);
-  $("#uploadChartTitle").textContent = clean(metric || "Uploaded metric");
-  $("#uploadChart").innerHTML = values
-    .map((v, i) => {
-      const l = uploadLabel(rows[i], i, analysis.labelColumn);
-      return `<div class="bar"><span style="height:${Math.max(5, (Math.abs(v) / max) * 100)}%"></span><small>${esc(l)}<br>${money(v)}</small></div>`;
-    })
-    .join("");
+  if (!state.uploadRows.length) return;
+  const metric = $("#uploadMetricSelect").value;
+  if (!metric) return;
+  const labels = state.uploadRows.map(r => r.period || r.year || r.date || "");
+  const values = state.uploadRows.map(r => Number(r[metric] || 0));
+  const fmt = money;
+  $("#uploadChart").innerHTML = buildSvgChart(values, labels, fmt);
 }
 
 function renderUploadProfitChart(rows, analysis) {
   const col = analysis.profitColumn;
   if (!col) return;
   const vals = rows.map((r) => Number(r[col] || 0));
-  const max = Math.max(...vals.map((v) => Math.abs(v)), 1);
   const profitable = vals.filter((v) => v > 0).length;
   $("#uploadProfitSummary").textContent = `${profitable}/${vals.length} profitable`;
   $("#uploadProfitTitle").textContent = `${clean(col)} by period`;
-  $("#uploadProfitChart").innerHTML = vals
-    .map((v, i) => {
-      const l = uploadLabel(rows[i], i, analysis.labelColumn);
-      const color = v >= 0 ? "background:linear-gradient(180deg, var(--leaf), var(--aqua))" : "background:linear-gradient(180deg, var(--ember), var(--ochre))";
-      return `<div class="bar"><span style="height:${Math.max(5, (Math.abs(v) / max) * 100)}%;${color}"></span><small>${esc(l)}<br>${money(v)}</small></div>`;
-    })
-    .join("");
+  const labels = rows.map((r, i) => uploadLabel(r, i, analysis.labelColumn));
+  $("#uploadProfitChart").innerHTML = buildSvgChart(vals, labels, money);
 }
 
 function renderUploadMarginChart(rows, analysis) {
@@ -549,17 +585,12 @@ function renderUploadMarginChart(rows, analysis) {
     const rev = Number(r[analysis.revenueColumn] || 0);
     return rev ? Number(r[analysis.profitColumn] || 0) / rev : 0;
   });
-  const max = Math.max(...margins.map((v) => Math.abs(v)), 0.01);
-  const firstM = margins[0];
-  const lastM = margins.at(-1);
+  const firstM = margins[0] || 0;
+  const lastM = margins.at(-1) || 0;
   $("#uploadMarginSummary").textContent = `${pct(firstM)} → ${pct(lastM)}`;
   $("#uploadMarginTitle").textContent = "Profit margin trend";
-  $("#uploadMarginChart").innerHTML = margins
-    .map((v, i) => {
-      const l = uploadLabel(rows[i], i, analysis.labelColumn);
-      return `<div class="bar"><span style="height:${Math.max(5, (Math.abs(v) / max) * 100)}%"></span><small>${esc(l)}<br>${pct(v)}</small></div>`;
-    })
-    .join("");
+  const labels = rows.map((r, i) => uploadLabel(r, i, analysis.labelColumn));
+  $("#uploadMarginChart").innerHTML = buildSvgChart(margins, labels, pct);
 }
 
 function renderUploadTable(rows, columns) {
