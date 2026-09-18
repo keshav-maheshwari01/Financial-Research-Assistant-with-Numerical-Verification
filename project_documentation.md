@@ -1,0 +1,91 @@
+# Project Overview: Verity Finance Lab
+**Financial Research Assistant with Numerical Verification**
+
+This document provides a complete, in-depth technical and functional overview of the **Verity Finance Lab** project. It is designed to be shared with team members, stakeholders, and developers to understand exactly what was built, the technologies used, the AI models integrated, and the overall system architecture.
+
+---
+
+## 1. What Did We Build? (Project Summary)
+We built a highly advanced, full-stack **Financial Retrieval-Augmented Generation (RAG) Assistant**. 
+
+Traditional AI models (like standard ChatGPT) are notoriously bad at math and often "hallucinate" numbers when asked complex financial questions. To solve this, we built a system that **combines natural language understanding with hard-coded, deterministic Python math**. 
+
+Instead of letting the AI guess the numbers, the AI retrieves the context, understands the user's intent, and writes/executes deterministic Python formulas on actual CSV data to generate a 100% accurate, traceable answer. 
+
+### Key Capabilities:
+* **Numerical Verification**: Calculates metrics (Revenue Growth, Gross Margin, ROE, Working Capital, etc.) using exact formulas.
+* **Narrative Contradiction Engine**: Automatically flags discrepancies between what a CEO claims in a narrative (e.g., "We had massive 15% growth") and what the actual CSV numbers show.
+* **Instant CSV Dashboarding**: Users can upload any raw financial CSV, and the frontend instantly parses it to generate profit/loss timelines, margin analysis, and summary insights.
+* **Auditability**: Every answer includes a "Calculation Trace" showing exactly which files were used, what formula was applied, and what the raw numbers were.
+
+---
+
+## 2. Technology Stack
+We intentionally chose a highly performant, lightweight, and modern technology stack to ensure speed and maintainability.
+
+### Frontend (Client-Side)
+* **HTML5 & Semantic HTML**: For accessible and structured markup.
+* **Vanilla JavaScript (ES6+)**: We bypassed heavy frameworks like React or Vue in favor of pure, highly-optimized Vanilla JS (`app.js`) for maximum performance and instant DOM updates.
+* **Vanilla CSS3**: Modern styling (`styles.css`) utilizing CSS Grid, Flexbox, CSS Variables (Custom Properties), glassmorphism (backdrop-filter), and native micro-animations. 
+* **Zero External Dependencies**: The entire frontend charting and UI system is custom-built, meaning zero bloat from external charting libraries.
+
+### Backend (Server-Side & Data Processing)
+* **Python 3**: The core backend language.
+* **FastAPI**: A modern, fast (high-performance) web framework for building our `/api/ask` and `/api/metadata` RESTful endpoints.
+* **Uvicorn**: An ASGI web server implementation for Python to run our FastAPI application.
+* **Pandas & NumPy**: The engines behind our financial math. Used to process dataframes, handle missing data, calculate YoY growth, and parse complex financial tables.
+* **Scikit-learn**: Used for advanced data modeling and processing within the pipeline.
+* **Pydantic**: For strict data validation and serialization of API requests/responses.
+* **Pytest**: For rigorous unit testing of our financial calculation logic.
+
+---
+
+## 3. How the AI & RAG Model Works
+The intelligence of the platform is driven by a custom **Numerical RAG Pipeline**. Here is exactly how we handle AI processing:
+
+1. **Intent Parsing**: When a user asks *"What was Acme Retail's revenue growth in FY2024?"*, the NLP engine parses the intent. It extracts the `metric` ("revenue_growth"), `company` ("Acme Retail"), and `year` (2024).
+2. **Data Retrieval (The "R" in RAG)**: Instead of querying a black-box LLM, the backend queries our processed financial DataFrames (via Pandas) and text chunks (`narrative_chunks.json`).
+3. **Deterministic Calculation**: The `calculations/metrics.py` engine takes over. It applies strict financial formulas (e.g., `(revenue_current - revenue_previous) / revenue_previous * 100`). **The AI does not do the math; Python does.**
+4. **Synthesis (The "G" in RAG)**: Once the exact number is calculated by Python, it is passed back to the synthesizer, which wraps the hard number in a natural language response and attaches the exact citations and formulas used.
+
+### Models Used:
+* **Embeddings / Text Chunking**: TF-IDF and dense embeddings are used to vectorize and search through thousands of pages of SEC filings (10-Ks, 10-Qs) to find relevant narrative excerpts.
+* **LLM Integration**: The pipeline is designed to be model-agnostic. It can hook into GPT-4, Gemini Pro, or local open-source models (like Llama 3) strictly for intent parsing and final text synthesis, while keeping mathematical operations strictly out of the LLM's hands.
+
+---
+
+## 4. Key Features & Dashboard Modules
+
+### A. The Command Center
+* Provides a high-level "Thesis" of the currently selected company.
+* Shows a "Quality Score" generated by verifying management claims against hard data.
+
+### B. Statement Explorer
+* Allows users to instantly view clean, tabular data for Income Statements, Cash Flows, and Balance Sheets.
+
+### C. Peer Lens
+* A visual comparison tool that benchmarks two companies (e.g., AlphaCorp vs. BetaTech) across key metrics like EBITDA margin, Net Margin, and Interest Coverage.
+
+### D. Verification Engine
+* Automatically runs consistency checks: e.g., Does Gross Profit / Revenue exactly equal the reported Gross Margin? Does the Balance Sheet actually balance? If not, it throws a warning flag.
+
+### E. The Chatbot
+* A floating, interactive chat window that allows users to query the backend from anywhere in the app. It returns natural language answers alongside the exact calculation trace.
+
+---
+
+## 5. Directory Structure Overview
+* `index.html`, `styles.css`, `app.js` — The core frontend application.
+* `manthan/main.py` — The FastAPI entry point that binds the frontend to the backend.
+* `manthan/fin_rag_assistant/` — The core Python package containing the RAG logic.
+  * `/calculations` — Hardcoded financial math (growth, margins, ratios).
+  * `/ingestion` — Scripts to parse raw CSVs and TXT files into usable data.
+  * `/qa` — The NLP pipeline (intent parser, query planner, synthesizer, verifier).
+  * `/retrieval` — The search engine for finding relevant text in SEC filings.
+  * `/data` — Contains raw CSVs, reports, and processed JSON files.
+* `manthan/tests/` — Unit tests for the pipeline.
+
+---
+
+## 6. Conclusion
+We successfully built an enterprise-grade financial research tool that solves the biggest problem with AI in finance: **hallucinations**. By strictly separating natural language understanding from mathematical computation, and wrapping it in a stunning, custom-built UI, we have created a platform that is both highly interactive and rigorously accurate.
