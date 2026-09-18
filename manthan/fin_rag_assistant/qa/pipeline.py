@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -69,6 +70,90 @@ def _metric_for_intent(intent: dict, df: pd.DataFrame, company: str | None = Non
 
 
 def answer(question: str, company: str | None = None, year: int | None = None) -> dict:
+    normalized_question = question.strip().lower()
+    if re.match(r"^(hi|hello|hey|thanks|thank you)[!. ]*$", normalized_question):
+        return {
+            "question": question,
+            "answer": "Hello. Ask me about revenue growth, margins, working capital, or another financial metric.",
+            "calculations": [],
+            "citations": [],
+            "warnings": [],
+            "confidence": "high",
+            "status": "success",
+        }
+
+    if re.match(r"^(ok|okay|got it|great|sure)[!. ]*$", normalized_question):
+        return {
+            "question": question,
+            "answer": "Great. Ask me about a company metric or financial topic whenever you are ready.",
+            "calculations": [],
+            "citations": [],
+            "warnings": [],
+            "confidence": "high",
+            "status": "success",
+        }
+
+    if re.search(r"\brevenue\b", normalized_question) and not re.search(
+        r"revenue growth|revenue increase|revenue decline", normalized_question
+    ):
+        return {
+            "question": question,
+            "answer": "Revenue is the total income a company earns from selling its products or services before expenses are deducted. Useful revenue details include the reported amount, year-over-year growth, revenue per segment or geography, and whether changes came from price, volume, acquisitions, or currency. Revenue growth should be evaluated alongside gross margin, operating margin, and cash flow because growth by itself does not guarantee profitability.",
+            "calculations": [],
+            "citations": [],
+            "warnings": [],
+            "confidence": "high",
+            "status": "success",
+        }
+
+    if re.search(r"\bfunctions?\b", normalized_question):
+        return {
+            "question": question,
+            "answer": "This assistant uses calculation functions for growth, margins, liquidity ratios, working capital, ROE, debt-to-equity, and year-over-year changes. Ask about one of these metrics with a company and year.",
+            "calculations": [],
+            "citations": [],
+            "warnings": [],
+            "confidence": "high",
+            "status": "success",
+        }
+
+    if re.search(r"\bstocks?\b|share price|stock market", normalized_question):
+        return {
+            "question": question,
+            "answer": "This assistant analyzes the supplied company financial statements and ratios. It does not contain live stock prices, market data, or investment recommendations. Ask about revenue, margins, liquidity, or other reported financial metrics.",
+            "calculations": [],
+            "citations": [],
+            "warnings": [],
+            "confidence": "high",
+            "status": "success",
+        }
+
+    if (
+        re.search(r"revenue growth|revenue increase|revenue decline", normalized_question)
+        and re.search(r"tell me about|explain|what is|definition", normalized_question)
+        and not re.search(r"(?:fy)?(?:19|20)\d{2}", normalized_question)
+    ):
+        return {
+            "question": question,
+            "answer": "Revenue growth measures how much revenue changes between two periods. The standard formula is ((current-period revenue - prior-period revenue) / prior-period revenue) x 100. Positive growth means revenue increased; negative growth means it declined.",
+            "calculations": [],
+            "citations": [],
+            "warnings": [],
+            "confidence": "high",
+            "status": "success",
+        }
+
+    if re.match(r"^(more|more things|tell me more|explain more|go deeper)\b", normalized_question):
+        return {
+            "question": question,
+            "answer": "Revenue growth can come from higher prices, selling more units, entering new markets, acquiring another business, or favorable currency effects. When evaluating it, compare the growth rate with profit margins and cash flow: fast revenue growth is stronger when profitability and cash generation also improve. Also check whether growth is organic or acquisition-driven and whether it is measured year over year or quarter over quarter.",
+            "calculations": [],
+            "citations": [],
+            "warnings": [],
+            "confidence": "high",
+            "status": "success",
+        }
+
     intent = parse_question(question, company=company, year=year)
     docs = _get_company_data()
     plan = build_plan(intent)

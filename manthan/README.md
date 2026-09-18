@@ -78,10 +78,15 @@ copy .env.example .env
 Example values:
 
 ```env
-LLM_API_KEY=
-LLM_MODEL=gpt-4o-mini
+GROQ_API_KEY=your_groq_api_key_here
+GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_TIMEOUT_SECONDS=20
 DEBUG=false
 ```
+
+Keep the real key in `.env`, not `.env.example`. The application loads `.env` and falls back to its deterministic verified response when the key is missing or the Groq request fails.
+
+Groq is used only to write the final wording from verified calculations and retrieved citations. Python remains the source of truth for financial values.
 
 ## 9. Running the backend
 
